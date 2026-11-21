@@ -35,4 +35,6 @@ jobs:
             exit 0
           fi
           git commit -m "chore: auto-check channels $(date -u +%Y-%m-%d)"
+          # Rebase onto any concurrent commits (e.g. manual edits via API) before pushing
+          git pull --rebase origin main || { echo "rebase failed"; exit 1; }
           git push
