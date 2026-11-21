@@ -15,6 +15,28 @@ RAW = "live_result.m3u"
 EPG = "#EXTM3U x-tvg-url=\"https://gh-proxy.com/https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/epg/epg.gz\""
 DROP_GROUPS = {"🕘️更新时间", "💰央视付费频道"}
 
+# 2026-11-21 逐频道抓帧核对台标后确认删除的频道：
+# 台标不符（串台/无正规台标的纯广告源）或无信号（彩条/蓝屏）。
+# 注意：台标正确但恰逢购物时段的频道不删（广告为时段轮播，属频道自身节目）。
+DROP_NAMES = {
+    "黑龙江卫视",     # 台标显示"广东"，串台 + 购物广告
+    "浙江经济生活",   # 台标"中国蓝新闻"，串台
+    "之江纪录",       # 台标"中国蓝新闻"，串台
+    "湖州新闻综合",   # 台标"之江纪录"，串台
+    "浙江休闲台",     # 台标"中国蓝新闻"，串台
+    "名山综合",       # 无正规台标，纯购物广告（4000-683-958）
+    "雅安新闻综合",   # 无正规台标，纯购物广告
+    "中国蓝新闻",     # 彩条测试信号，无节目
+    "广元公共",       # 蓝屏无信号
+    "定襄综合",       # 蓝屏无信号
+}
+
+# 台标错配但存在正常备选线路的频道：用正常线路替换（按频道名匹配）。
+REPLACE_URL = {
+    "广东卫视": "http://107.150.60.122/live/gdwshd.m3u8",          # 广东卫视台标，正常
+    "河北卫视": "http://38.75.136.137:98/gslb/dsdqpub/hewshd.m3u8?auth=testpub",  # 河北卫视台标，正常
+}
+
 
 def download():
     ctx = ssl.create_default_context()
@@ -57,7 +79,8 @@ def main():
             i += 1
     print("original entries:", len(blocks))
 
-    kept = [(e, u) for e, u in blocks if group_of(e) not in DROP_GROUPS]
+    kept = [(e, u) for e, u in blocks
+            if group_of(e) not in DROP_GROUPS and name_of(e) not in DROP_NAMES]
     seen = set()
     dedup = []
     for e, u in kept:
@@ -65,6 +88,9 @@ def main():
         if n in seen:
             continue
         seen.add(n)
+        if n in REPLACE_URL:
+            u = REPLACE_URL[n]
+            print("replaced line for", n, "->", u)
         dedup.append((e, u))
 
     out = [EPG]
