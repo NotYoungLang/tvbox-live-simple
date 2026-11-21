@@ -29,13 +29,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet && [ ! -f CHECK_REPORT.md ]; then
-            echo "No changes"
-            exit 0
-          fi
           git add -A
           if git diff --cached --quiet; then
-            echo "No staged changes"
+            echo "No changes to commit"
             exit 0
           fi
           git commit -m "chore: auto-check channels $(date -u +%Y-%m-%d)"
